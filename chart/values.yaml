@@ -16,7 +16,7 @@ studio:
     revision: "689b3af198baaf6f11110be38a9daa7188dfd8ad"
 
   # Weights delivery: the app image carries deps only; an init container pulls
-  # the pinned revision from the Hub into a shared volume. tmm has HF egress.
+  # the pinned revision from the Hub into a shared volume. cluster has HF egress.
   #   pvc      — one pull into a shared PVC (default): restarts and sibling
   #              pods skip it; pods co-locate on the MIG node anyway
   #   emptyDir — per-pod: re-pulls on every restart
@@ -36,7 +36,7 @@ studio:
   env: {}
 
   # Optional accelerator. The resource name accepts nvidia.com/gpu or an MIG
-  # slice: nvidia.com/mig-3g.71gb (the largest tmm slice, 69.75 GiB — d3-turbo
+  # slice: nvidia.com/mig-3g.71gb (the largest cluster slice, 69.75 GiB — d3-turbo
   # needs 72 GiB per its registry floor, which is metadata, not enforced; the
   # ~48.5 GiB of BF16 weights leave ~15 GiB of working room) or nvidia.com/gpu
   # for a full H200 on the un-MIG'd node.
@@ -85,7 +85,7 @@ studio:
     name: ""
 
   # OpenShift Route. host is optional: empty lets the cluster default it
-  # (d3-studio-<project>.apps.ocp.cloud.rhai-tmm.dev).
+  # (d3-studio-<project>.apps.cluster.com).
   route:
     enabled: true
     host: ""

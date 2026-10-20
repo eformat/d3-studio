@@ -81,7 +81,7 @@ curl -s localhost:7860/v1/systemone -H 'content-type: application/json' -d '{
 
 The app image carries **deps only** (~8–10 GB); the weights are pulled at pod
 start by an **init container** (`studio/scripts/pull_model.py`, idempotent — a
-marker file skips the ~52 GiB pull once done) into a shared PVC. tmm has HF
+marker file skips the ~52 GiB pull once done) into a shared PVC. cluster has HF
 egress; an optional HF token (a Secret reference, never a value in this repo)
 speeds the pull.
 
@@ -94,7 +94,7 @@ helm upgrade --install d3-studio chart/ -n user-mhepburn \
   --set hfTokenSecret=d3-hf-token
 ```
 
-* GPU placement is a chart value: `nvidia.com/mig-3g.71gb` (the largest tmm MIG
+* GPU placement is a chart value: `nvidia.com/mig-3g.71gb` (the largest cluster MIG
   slice, 69.75 GiB — 2.25 GiB under d3-turbo's declared 72 GiB floor, which is
   registry metadata, not enforced; the 48.5 GiB of BF16 weights leave ~15 GiB of
   working room at studio-scale traffic) or `nvidia.com/gpu` for a full H200;
@@ -112,4 +112,4 @@ Page (CC BY 2.0). Resized/re-encoded for the decks.
 ## Status
 
 M1+M2 complete (studio + tests green, all three modes QA'd in a browser).
-M3 (image) and M4 (deploy to tmm) pending — see `~/.opencode/plan/d3-studio.md`.
+M3 (image) and M4 (deploy to cluster) pending — see `~/.opencode/plan/d3-studio.md`.

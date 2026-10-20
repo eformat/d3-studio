@@ -5,7 +5,7 @@ Checks the readiness lifecycle and every answer surface the studio UI uses:
 uploaded clip, and the multi-question state-once read. Exits 0 only when
 everything passes, so it gates the deploy report.
 
-    .venv/bin/python studio/scripts/smoke.py https://d3-studio-user-mhepburn.apps.ocp.cloud.rhai-tmm.dev
+    .venv/bin/python studio/scripts/smoke.py https://d3-studio-user-mhepburn.apps.cluster.com
 """
 from __future__ import annotations
 

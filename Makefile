@@ -67,6 +67,6 @@ image:
 push: image
 	podman push $(IMAGE):$(TAG)
 
-# Post-deploy smoke test: make smoke URL=https://d3-studio-user-mhepburn.apps.ocp.cloud.rhai-tmm.dev
+# Post-deploy smoke test
 smoke: $(PYTHON)
 	$(PYTHON) studio/scripts/smoke.py $(URL)
