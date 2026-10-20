@@ -1,0 +1,144 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "d3-studio.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "d3-studio.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.studio.replicas }}
+  selector:
+    matchLabels:
+      {{- include "d3-studio.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "d3-studio.labels" . | nindent 8 }}
+        {{- if .Values.studio.gpu.enabled }}
+        {{- with .Values.studio.gpu.labels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- end }}
+      {{- if or .Values.studio.metrics.enabled .Values.studio.gpu.enabled }}
+      annotations:
+        {{- if .Values.studio.metrics.enabled }}
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: {{ .Values.studio.port | quote }}
+        {{- end }}
+        {{- if .Values.studio.gpu.enabled }}
+        {{- with .Values.studio.gpu.annotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- end }}
+      {{- end }}
+    spec:
+      serviceAccountName: {{ template "d3-studio.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.studio.podSecurityContext | nindent 8 }}
+      {{- with .Values.studio.gpu.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- $tolerations := .Values.studio.gpu.tolerations | default list }}
+      {{- if .Values.studio.gpu.enabled }}
+      {{- $tolerations = concat (.Values.studio.gpu.defaultTolerations | default list) $tolerations }}
+      {{- end }}
+      {{- with $tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        {{- $mode := .Values.studio.weights.mode | default "pvc" }}
+        {{- if eq $mode "pvc" }}
+        - name: weights
+          persistentVolumeClaim:
+            claimName: {{ .Values.studio.weights.pvcName }}
+        {{- else if eq $mode "emptyDir" }}
+        - name: weights
+          emptyDir:
+            sizeLimit: {{ .Values.studio.weights.pvcSize }}
+        {{- end }}
+      {{- $pulled := ne $mode "none" }}
+      initContainers:
+        {{- if $pulled }}
+        # The sidecar pull: fetches the pinned revision from the Hub into the
+        # shared volume, idempotently (a marker file skips it once done). The
+        # app loads with digest verification and no HF egress.
+        - name: pull-weights
+          image: {{ required "Studio image must be specified! Build and push it with `make image` / `make push`." .Values.studio.image }}
+          imagePullPolicy: {{ .Values.studio.imagePullPolicy }}
+          command: ["python", "studio/scripts/pull_model.py"]
+          securityContext:
+            {{- toYaml .Values.studio.containerSecurityContext | nindent 12 }}
+          env:
+            - name: HF_HOME
+              value: /weights
+            - name: D3_MODEL
+              value: {{ .Values.studio.model.repo | quote }}
+            - name: D3_REVISION
+              value: {{ .Values.studio.model.revision | quote }}
+            {{- with .Values.studio.weights.hfTokenSecret }}
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ . }}
+                  key: token
+            {{- end }}
+          volumeMounts:
+            - name: weights
+              mountPath: /weights
+        {{- end }}
+      containers:
+        - name: {{ template "d3-studio.name" . }}
+          image: {{ required "Studio image must be specified! Build and push it with `make image` / `make push`." .Values.studio.image }}
+          imagePullPolicy: {{ .Values.studio.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.studio.port }}
+              protocol: TCP
+          securityContext:
+            {{- toYaml .Values.studio.containerSecurityContext | nindent 12 }}
+          env:
+            {{- include "d3-studio.env" . | nindent 12 }}
+          resources:
+            {{- $resources := deepCopy (.Values.studio.resources | default dict) }}
+            {{- if .Values.studio.gpu.enabled }}
+            {{- $limits := deepCopy ($resources.limits | default dict) }}
+            {{- $_ := set $limits .Values.studio.gpu.resourceName .Values.studio.gpu.count }}
+            {{- $_ := set $resources "limits" $limits }}
+            {{- $requests := deepCopy ($resources.requests | default dict) }}
+            {{- $_ := set $requests .Values.studio.gpu.resourceName .Values.studio.gpu.count }}
+            {{- $_ := set $resources "requests" $requests }}
+            {{- end }}
+            {{- toYaml $resources | nindent 12 }}
+          {{- if $pulled }}
+          volumeMounts:
+            - name: weights
+              mountPath: /weights
+          {{- end }}
+          # /api/ready answers the runtime's health lifecycle (503 until the
+          # model is loaded, verified and warm): the init pull (~52 GiB, a few
+          # minutes) plus the load (~1-3 min from the page cache) both land
+          # inside the generous startup budget.
+          startupProbe:
+            httpGet:
+              path: /api/ready
+              port: http
+            periodSeconds: 10
+            failureThreshold: 120
+          readinessProbe:
+            httpGet:
+              path: /api/ready
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+          # /health/live is the runtime's own liveness: 200 while the process
+          # serves, whether or not the model is ready (/health 503s during the
+          # load and would kill the pod mid-pull).
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            periodSeconds: 15
+            timeoutSeconds: 2

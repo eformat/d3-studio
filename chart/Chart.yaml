@@ -1,0 +1,6 @@
+apiVersion: v2
+name: d3-studio
+description: d3 Studio — a multimodal decision studio for vllm-sr/d3-turbo
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

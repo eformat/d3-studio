@@ -1,0 +1,7 @@
+# torch comes from the index that matches the hardware (CPU locally, CUDA in
+# the image): install it first, e.g. pip install torch --index-url
+# https://download.pytorch.org/whl/cpu
+fastapi>=0.115
+# The vllm-srun runtime (the studio's engine), installed from a checkout of
+# the semantic-router repository — it is not published to PyPI:
+#   pip install ./model-runtime[multimodal]

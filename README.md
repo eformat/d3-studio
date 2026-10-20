@@ -12,6 +12,8 @@ Three studio surfaces:
 
 Everything ships in one process: the [vllm-srun](https://github.com/vllm-project/semantic-router/tree/main/src/model-runtime) runtime (the native transformers engine for the decision models) embedded in a FastAPI app that also serves the studio UI.
 
+![images/d3-studio.png](images/d3-studio.png)
+
 ## Layout
 
 ```
@@ -75,7 +77,7 @@ curl -s localhost:7860/v1/systemone -H 'content-type: application/json' -d '{
   the question ran over its token budget (the UI offers the long-context toggle,
   `options.long_context: true`, which reads up to 131k tokens per question).
 
-## Deploy (tmm, user-mhepburn)
+## Deploy
 
 The app image carries **deps only** (~8–10 GB); the weights are pulled at pod
 start by an **init container** (`studio/scripts/pull_model.py`, idempotent — a

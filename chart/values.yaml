@@ -1,0 +1,110 @@
+studio:
+  name: ""
+  # Build with `make image` and push to Quay before installing. The image
+  # carries deps only (~8-10 GB); the weights are pulled by the init container.
+  image: "quay.io/eformat/d3-studio:latest"
+  imagePullPolicy: Always
+  # One pod on one 3g.71gb MIG slice. replicas 2 puts two pods on two slices
+  # (the PVC makes the second pod skip the pull).
+  replicas: 1
+  port: 8080
+
+  # The model to serve. The revision is the pinned Decision 3.0 release; the
+  # runtime verifies every file digest against it at load.
+  model:
+    repo: vllm-sr/d3-turbo
+    revision: "689b3af198baaf6f11110be38a9daa7188dfd8ad"
+
+  # Weights delivery: the app image carries deps only; an init container pulls
+  # the pinned revision from the Hub into a shared volume. tmm has HF egress.
+  #   pvc      — one pull into a shared PVC (default): restarts and sibling
+  #              pods skip it; pods co-locate on the MIG node anyway
+  #   emptyDir — per-pod: re-pulls on every restart
+  #   none     — the image carries the weights (not this chart's default build)
+  weights:
+    mode: pvc
+    pvcName: d3-weights
+    pvcSize: 64Gi
+    # Optional: an existing Secret holding an HF token (key `token`) for a
+    # faster authenticated pull. Create it outside this chart:
+    #   oc create secret generic d3-hf-token --from-literal=token=hf_...
+    hfTokenSecret: ""
+
+  # Passthrough environment for the app (D3_*), merged with the chart's own
+  # D3_DEVICE default (cuda with the GPU enabled, cpu without) and D3_OFFLINE
+  # (1 with weights.mode != none: the init pull already fetched the weights).
+  env: {}
+
+  # Optional accelerator. The resource name accepts nvidia.com/gpu or an MIG
+  # slice: nvidia.com/mig-3g.71gb (the largest tmm slice, 69.75 GiB — d3-turbo
+  # needs 72 GiB per its registry floor, which is metadata, not enforced; the
+  # ~48.5 GiB of BF16 weights leave ~15 GiB of working room) or nvidia.com/gpu
+  # for a full H200 on the un-MIG'd node.
+  gpu:
+    enabled: true
+    resourceName: nvidia.com/mig-3g.71gb
+    count: 1
+    nodeSelector: {}
+    # Applied automatically when the GPU is enabled, before any extra
+    # tolerations below, so GPU pods schedule onto tainted GPU nodes.
+    defaultTolerations:
+      - effect: NoSchedule
+        key: nvidia.com/gpu
+        operator: Exists
+    tolerations: []
+    # Applied to the pod template when the GPU is enabled: pins the workload
+    # to the unreserved-GPU hardware profile and routes it through Kueue.
+    annotations:
+      opendatahub.io/hardware-profile-name: unreserved-gpu
+      opendatahub.io/hardware-profile-namespace: redhat-ods-applications
+    labels:
+      kueue.x-k8s.io/queue-name: unreserved
+
+  # The 26B model stages through RAM on load (~50 GiB peak with the page
+  # cache); the GPU resource is added to requests AND limits automatically.
+  resources:
+    requests:
+      cpu: 4
+      memory: 64Gi
+    limits:
+      memory: 96Gi
+
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+
+  serviceAccount:
+    create: true
+    annotations: {}
+    name: ""
+
+  # OpenShift Route. host is optional: empty lets the cluster default it
+  # (d3-studio-<project>.apps.ocp.cloud.rhai-tmm.dev).
+  route:
+    enabled: true
+    host: ""
+    # HAProxy route timeout: a track or many-question request can run for
+    # minutes on a busy slice — the default 30s kills those mid-flight.
+    annotations:
+      haproxy.router.openshift.io/timeout: 120s
+    tls:
+      enabled: true
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect
+
+  # Prometheus metrics: /metrics is served by the runtime on the app port;
+  # the ServiceMonitor feeds OpenShift user-workload monitoring, the pod
+  # annotations are the fallback for annotation-based scrapers.
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 30s
+      scrapeTimeout: 10s
+      additionalLabels: {}

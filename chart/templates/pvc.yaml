@@ -1,0 +1,15 @@
+{{- if and (ne (.Values.studio.weights.mode | default "pvc") "none") (eq .Values.studio.weights.mode "pvc") }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.studio.weights.pvcName }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "d3-studio.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.studio.weights.pvcSize }}
+{{- end }}

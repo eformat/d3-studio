@@ -1,0 +1,30 @@
+{{- if .Values.studio.route.enabled }}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ template "d3-studio.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "d3-studio.labels" . | nindent 4 }}
+  {{- with .Values.studio.route.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.studio.route.host }}
+  host: {{ . }}
+  {{- end }}
+  port:
+    targetPort: http
+  {{- if .Values.studio.route.tls.enabled }}
+  tls:
+    termination: {{ .Values.studio.route.tls.termination }}
+    {{- with .Values.studio.route.tls.insecureEdgeTerminationPolicy }}
+    insecureEdgeTerminationPolicy: {{ . }}
+    {{- end }}
+  {{- end }}
+  to:
+    kind: Service
+    name: {{ template "d3-studio.name" . }}
+    weight: 100
+{{- end }}

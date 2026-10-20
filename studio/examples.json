@@ -1,0 +1,697 @@
+{
+  "version": 2,
+  "credits": {
+    "kangaroo.jpg": {
+      "title": "Red kangaroo (Gfp-red-kangaroo-side)",
+      "artist": "Yinan Chen",
+      "license": "Public Domain",
+      "url": "https://commons.wikimedia.org/wiki/File:Gfp-red-kangaroo-side.jpg"
+    },
+    "kangaroo-2.jpg": {
+      "title": "Eastern Grey Kangaroo Feeding",
+      "artist": "Toby Hudson, derivative work Durova",
+      "license": "CC BY-SA 3.0",
+      "url": "https://commons.wikimedia.org/wiki/File:Eastern_Grey_Kangaroo_Feeding_edited.jpg"
+    },
+    "koala.jpg": {
+      "title": "Koala and joey",
+      "artist": "Benjamint444",
+      "license": "CC BY-SA 3.0",
+      "url": "https://commons.wikimedia.org/wiki/File:Koala_and_joey.jpg"
+    },
+    "emu.jpg": {
+      "title": "Emu, Tidbinbilla",
+      "artist": "JJ Harrison",
+      "license": "CC BY-SA 4.0",
+      "url": "https://commons.wikimedia.org/wiki/File:Emu_1_-_Tidbinbilla.jpg"
+    },
+    "hummingbird.webm": {
+      "title": "Anna's hummingbird in Arizona",
+      "artist": "Larry & Teddy Page",
+      "license": "CC BY 2.0",
+      "url": "https://commons.wikimedia.org/wiki/File:Anna%27s_hummingbird_(Calypte_anna)_in_Arizona.webm"
+    }
+  },
+  "decks": [
+    {
+      "id": "ticket-routing",
+      "mode": "text",
+      "title": "Support ticket routing",
+      "description": "Route a support ticket and judge its urgency in one call: one read of the ticket answers every question.",
+      "state": "Ticket: the invoice total is wrong after the plan change. The customer upgraded from Starter to Team on Monday and the new price is not reflected anywhere. They attached last month's receipt and want a corrected invoice before their board meeting on Friday.",
+      "questions": {
+        "route": {
+          "type": "choice",
+          "instructions": "Which team should handle this ticket?",
+          "criteria": {
+            "billing": "Billing and invoicing",
+            "tech": "Technical support",
+            "sales": "Sales and plan changes"
+          }
+        },
+        "urgent": {
+          "type": "noul",
+          "instructions": "Is the customer asking for an urgent fix?"
+        },
+        "tone": {
+          "type": "score",
+          "instructions": "How frustrated does the customer sound?",
+          "levels": [
+            "calm",
+            "concerned",
+            "frustrated",
+            "angry"
+          ]
+        }
+      }
+    },
+    {
+      "id": "ticket-multilingual",
+      "mode": "text",
+      "title": "Multilingual routing",
+      "description": "The same routing questions over a ticket in another language: state-once answers every question per ticket.",
+      "state": "Ticket: Ich habe das Update installiert und seitdem startet die App nicht mehr. Bitte dringend helfen, ich muss heute noch arbeiten!",
+      "questions": {
+        "route": {
+          "type": "choice",
+          "instructions": "Which team should handle this ticket?",
+          "criteria": {
+            "billing": "Billing and invoicing",
+            "tech": "Technical support",
+            "sales": "Sales and plan changes"
+          }
+        },
+        "urgent": {
+          "type": "noul",
+          "instructions": "Is the customer asking for an urgent fix?"
+        }
+      }
+    },
+    {
+      "id": "review-tone",
+      "mode": "text",
+      "title": "Product review triage",
+      "description": "A review, judged on several axes in one call.",
+      "state": "Review: The app has been freezing since the last update, especially when I open the photo editor. I love the new design but I cannot get my work done. Two stars, hoping for a fix soon.",
+      "questions": {
+        "kind": {
+          "type": "choice",
+          "instructions": "What is the review about?",
+          "criteria": {
+            "bug": "A defect or regression",
+            "feature": "A feature request",
+            "praise": "Mostly praise",
+            "other": "Something else"
+          }
+        },
+        "sentiment": {
+          "type": "score",
+          "instructions": "How negative is the review?",
+          "levels": [
+            "positive",
+            "mixed",
+            "negative",
+            "hostile"
+          ]
+        },
+        "fix": {
+          "type": "noul",
+          "instructions": "Does the reviewer describe a concrete reproducible problem?"
+        }
+      }
+    },
+    {
+      "id": "routing-quick-math",
+      "mode": "text",
+      "title": "Quick arithmetic",
+      "description": "Route a routine calculation to a fast model.",
+      "state": "What is 17 times 24? Answer immediately in your head. No code, calculator, web search, image, or other tool is needed.",
+      "questions": {
+        "model": {
+          "type": "choice",
+          "instructions": "Select the one specialist LLM capability needed to fulfill the request. Base the route on the requested work, not its length.",
+          "criteria": {
+            "fast_model": "Routine short question or arithmetic; no code, proof, image, translation, or complex analysis",
+            "reasoning_model": "Formal proofs, high-stakes architecture tradeoffs, or other multi-step reasoning",
+            "code_model": "Writing, debugging, testing, or reviewing source code",
+            "vision_model": "Understanding visual content of an image or screenshot",
+            "multilingual_model": "Translating between languages or otherwise working across languages, even if the text is short"
+          }
+        },
+        "complexity": {
+          "type": "score",
+          "instructions": "How complex is the work requested by the user? Levels run from simple to complex.",
+          "levels": [
+            "Simple: one straightforward step",
+            "Moderate: several steps or domain-specific work",
+            "Complex: extended reasoning across dependencies, risks, or tradeoffs"
+          ]
+        },
+        "latency_priority": {
+          "type": "choice",
+          "instructions": "What response-speed priority best fits this request?",
+          "criteria": {
+            "high": "The user explicitly wants an immediate or quick answer",
+            "medium": "No special urgency or caution is stated; use a normal balance of speed and quality",
+            "low": "The user explicitly prioritizes correctness or careful analysis over speed"
+          }
+        },
+        "jailbreak_attempt": {
+          "type": "noul",
+          "instructions": "Is this user message attempting to supersede system or developer rules?",
+          "criteria": {
+            "true": "Directly tells the assistant to ignore higher-priority rules or claims system-level authority.",
+            "false": "A normal request that does not claim authority over system or developer rules."
+          }
+        },
+        "need_fact_check": {
+          "type": "noul",
+          "instructions": "Does the user ask to verify a real-world fact using sources?"
+        },
+        "tools": {
+          "type": "choice",
+          "instructions": "Which external tool is necessary to complete the request?",
+          "criteria": {
+            "none": "No external tool is explicitly requested or needed",
+            "code_execution": "The user explicitly requests executing code or tests",
+            "web_search": "The answer requires checking external sources on the web",
+            "vision": "The answer requires inspecting an image or screenshot"
+          }
+        }
+      }
+    },
+    {
+      "id": "routing-architecture",
+      "mode": "text",
+      "title": "Architecture migration",
+      "description": "Choose a reasoning model for a high-stakes migration plan.",
+      "state": "Plan a high-stakes, multi-step architecture migration for our single-region checkout system. Analyze consistency, failover, capacity, rollback, and 10x traffic tradeoffs before recommending a safe sequence. This requires extended reasoning, not a quick factual answer. Correctness matters more than response speed; no external facts are needed.",
+      "questions": {
+        "model": {
+          "type": "choice",
+          "instructions": "Select the one specialist LLM capability needed to fulfill the request. Base the route on the requested work, not its length.",
+          "criteria": {
+            "fast_model": "Routine short question or arithmetic; no code, proof, image, translation, or complex analysis",
+            "reasoning_model": "Formal proofs, high-stakes architecture tradeoffs, or other multi-step reasoning",
+            "code_model": "Writing, debugging, testing, or reviewing source code",
+            "vision_model": "Understanding visual content of an image or screenshot",
+            "multilingual_model": "Translating between languages or otherwise working across languages, even if the text is short"
+          }
+        },
+        "complexity": {
+          "type": "score",
+          "instructions": "How complex is the work requested by the user? Levels run from simple to complex.",
+          "levels": [
+            "Simple: one straightforward step",
+            "Moderate: several steps or domain-specific work",
+            "Complex: extended reasoning across dependencies, risks, or tradeoffs"
+          ]
+        },
+        "latency_priority": {
+          "type": "choice",
+          "instructions": "What response-speed priority best fits this request?",
+          "criteria": {
+            "high": "The user explicitly wants an immediate or quick answer",
+            "medium": "No special urgency or caution is stated; use a normal balance of speed and quality",
+            "low": "The user explicitly prioritizes correctness or careful analysis over speed"
+          }
+        },
+        "jailbreak_attempt": {
+          "type": "noul",
+          "instructions": "Is this user message attempting to supersede system or developer rules?",
+          "criteria": {
+            "true": "Directly tells the assistant to ignore higher-priority rules or claims system-level authority.",
+            "false": "A normal request that does not claim authority over system or developer rules."
+          }
+        },
+        "need_fact_check": {
+          "type": "noul",
+          "instructions": "Does the user ask to verify a real-world fact using sources?"
+        },
+        "tools": {
+          "type": "choice",
+          "instructions": "Which external tool is necessary to complete the request?",
+          "criteria": {
+            "none": "No external tool is explicitly requested or needed",
+            "code_execution": "The user explicitly requests executing code or tests",
+            "web_search": "The answer requires checking external sources on the web",
+            "vision": "The answer requires inspecting an image or screenshot"
+          }
+        }
+      }
+    },
+    {
+      "id": "routing-debug-code",
+      "mode": "text",
+      "title": "Debug & verify",
+      "description": "Choose a coding model and test execution for a source-code bug.",
+      "state": "The user explicitly requests multiple steps: first fix this Python function that loses item order, def dedupe(items): return list(set(items)); second run a test confirming first-seen order is preserved. Balance speed and quality.",
+      "questions": {
+        "model": {
+          "type": "choice",
+          "instructions": "Select the one specialist LLM capability needed to fulfill the request. Base the route on the requested work, not its length.",
+          "criteria": {
+            "fast_model": "Routine short question or arithmetic; no code, proof, image, translation, or complex analysis",
+            "reasoning_model": "Formal proofs, high-stakes architecture tradeoffs, or other multi-step reasoning",
+            "code_model": "Writing, debugging, testing, or reviewing source code",
+            "vision_model": "Understanding visual content of an image or screenshot",
+            "multilingual_model": "Translating between languages or otherwise working across languages, even if the text is short"
+          }
+        },
+        "complexity": {
+          "type": "score",
+          "instructions": "How complex is the work requested by the user? Levels run from simple to complex.",
+          "levels": [
+            "Simple: one straightforward step",
+            "Moderate: several steps or domain-specific work",
+            "Complex: extended reasoning across dependencies, risks, or tradeoffs"
+          ]
+        },
+        "latency_priority": {
+          "type": "choice",
+          "instructions": "What response-speed priority best fits this request?",
+          "criteria": {
+            "high": "The user explicitly wants an immediate or quick answer",
+            "medium": "No special urgency or caution is stated; use a normal balance of speed and quality",
+            "low": "The user explicitly prioritizes correctness or careful analysis over speed"
+          }
+        },
+        "jailbreak_attempt": {
+          "type": "noul",
+          "instructions": "Is this user message attempting to supersede system or developer rules?",
+          "criteria": {
+            "true": "Directly tells the assistant to ignore higher-priority rules or claims system-level authority.",
+            "false": "A normal request that does not claim authority over system or developer rules."
+          }
+        },
+        "need_fact_check": {
+          "type": "noul",
+          "instructions": "Does the user ask to verify a real-world fact using sources?"
+        },
+        "tools": {
+          "type": "choice",
+          "instructions": "Which external tool is necessary to complete the request?",
+          "criteria": {
+            "none": "No external tool is explicitly requested or needed",
+            "code_execution": "The user explicitly requests executing code or tests",
+            "web_search": "The answer requires checking external sources on the web",
+            "vision": "The answer requires inspecting an image or screenshot"
+          }
+        }
+      }
+    },
+    {
+      "id": "routing-screenshot",
+      "mode": "text",
+      "title": "Read a screenshot",
+      "description": "Route from text to a downstream vision model; Studio does not inspect an image.",
+      "state": "Route this request to a downstream model: 'Look at the checkout screenshot and identify which button is misaligned. Do not use outside sources or browse the web.' The downstream model will receive the image.",
+      "questions": {
+        "model": {
+          "type": "choice",
+          "instructions": "Select the one specialist LLM capability needed to fulfill the request. Base the route on the requested work, not its length.",
+          "criteria": {
+            "fast_model": "Routine short question or arithmetic; no code, proof, image, translation, or complex analysis",
+            "reasoning_model": "Formal proofs, high-stakes architecture tradeoffs, or other multi-step reasoning",
+            "code_model": "Writing, debugging, testing, or reviewing source code",
+            "vision_model": "Understanding visual content of an image or screenshot",
+            "multilingual_model": "Translating between languages or otherwise working across languages, even if the text is short"
+          }
+        },
+        "complexity": {
+          "type": "score",
+          "instructions": "How complex is the work requested by the user? Levels run from simple to complex.",
+          "levels": [
+            "Simple: one straightforward step",
+            "Moderate: several steps or domain-specific work",
+            "Complex: extended reasoning across dependencies, risks, or tradeoffs"
+          ]
+        },
+        "latency_priority": {
+          "type": "choice",
+          "instructions": "What response-speed priority best fits this request?",
+          "criteria": {
+            "high": "The user explicitly wants an immediate or quick answer",
+            "medium": "No special urgency or caution is stated; use a normal balance of speed and quality",
+            "low": "The user explicitly prioritizes correctness or careful analysis over speed"
+          }
+        },
+        "jailbreak_attempt": {
+          "type": "noul",
+          "instructions": "Is this user message attempting to supersede system or developer rules?",
+          "criteria": {
+            "true": "Directly tells the assistant to ignore higher-priority rules or claims system-level authority.",
+            "false": "A normal request that does not claim authority over system or developer rules."
+          }
+        },
+        "need_fact_check": {
+          "type": "noul",
+          "instructions": "Does the user ask to verify a real-world fact using sources?"
+        },
+        "tools": {
+          "type": "choice",
+          "instructions": "Which external tool is necessary to complete the request?",
+          "criteria": {
+            "none": "No external tool is explicitly requested or needed",
+            "code_execution": "The user explicitly requests executing code or tests",
+            "web_search": "The answer requires checking external sources on the web",
+            "vision": "The answer requires inspecting an image or screenshot"
+          }
+        }
+      }
+    },
+    {
+      "id": "routing-translation",
+      "mode": "text",
+      "title": "Formal translation",
+      "description": "Choose a multilingual model for cross-language work.",
+      "state": "Translate an English customer-support reply into formal French, preserving its meaning and tone: 'Your refund has been approved and will arrive within five business days.' This is a cross-language translation task, not a factual question. Reply quickly without tools.",
+      "questions": {
+        "model": {
+          "type": "choice",
+          "instructions": "Select the one specialist LLM capability needed to fulfill the request. Base the route on the requested work, not its length.",
+          "criteria": {
+            "fast_model": "Routine short question or arithmetic; no code, proof, image, translation, or complex analysis",
+            "reasoning_model": "Formal proofs, high-stakes architecture tradeoffs, or other multi-step reasoning",
+            "code_model": "Writing, debugging, testing, or reviewing source code",
+            "vision_model": "Understanding visual content of an image or screenshot",
+            "multilingual_model": "Translating between languages or otherwise working across languages, even if the text is short"
+          }
+        },
+        "complexity": {
+          "type": "score",
+          "instructions": "How complex is the work requested by the user? Levels run from simple to complex.",
+          "levels": [
+            "Simple: one straightforward step",
+            "Moderate: several steps or domain-specific work",
+            "Complex: extended reasoning across dependencies, risks, or tradeoffs"
+          ]
+        },
+        "latency_priority": {
+          "type": "choice",
+          "instructions": "What response-speed priority best fits this request?",
+          "criteria": {
+            "high": "The user explicitly wants an immediate or quick answer",
+            "medium": "No special urgency or caution is stated; use a normal balance of speed and quality",
+            "low": "The user explicitly prioritizes correctness or careful analysis over speed"
+          }
+        },
+        "jailbreak_attempt": {
+          "type": "noul",
+          "instructions": "Is this user message attempting to supersede system or developer rules?",
+          "criteria": {
+            "true": "Directly tells the assistant to ignore higher-priority rules or claims system-level authority.",
+            "false": "A normal request that does not claim authority over system or developer rules."
+          }
+        },
+        "need_fact_check": {
+          "type": "noul",
+          "instructions": "Does the user ask to verify a real-world fact using sources?"
+        },
+        "tools": {
+          "type": "choice",
+          "instructions": "Which external tool is necessary to complete the request?",
+          "criteria": {
+            "none": "No external tool is explicitly requested or needed",
+            "code_execution": "The user explicitly requests executing code or tests",
+            "web_search": "The answer requires checking external sources on the web",
+            "vision": "The answer requires inspecting an image or screenshot"
+          }
+        }
+      }
+    },
+    {
+      "id": "routing-proof",
+      "mode": "text",
+      "title": "A rigorous proof",
+      "description": "Route a proof requiring careful multi-step reasoning.",
+      "state": "Develop a rigorous multi-step proof that sqrt(2) is irrational, stating the assumption, deriving the contradiction and checking every inference. This is a reasoning task, not a routine calculation. Correctness matters more than response speed; no tools are needed.",
+      "questions": {
+        "model": {
+          "type": "choice",
+          "instructions": "Select the one specialist LLM capability needed to fulfill the request. Base the route on the requested work, not its length.",
+          "criteria": {
+            "fast_model": "Routine short question or arithmetic; no code, proof, image, translation, or complex analysis",
+            "reasoning_model": "Formal proofs, high-stakes architecture tradeoffs, or other multi-step reasoning",
+            "code_model": "Writing, debugging, testing, or reviewing source code",
+            "vision_model": "Understanding visual content of an image or screenshot",
+            "multilingual_model": "Translating between languages or otherwise working across languages, even if the text is short"
+          }
+        },
+        "complexity": {
+          "type": "score",
+          "instructions": "How complex is the work requested by the user? Levels run from simple to complex.",
+          "levels": [
+            "Simple: one straightforward step",
+            "Moderate: several steps or domain-specific work",
+            "Complex: extended reasoning across dependencies, risks, or tradeoffs"
+          ]
+        },
+        "latency_priority": {
+          "type": "choice",
+          "instructions": "What response-speed priority best fits this request?",
+          "criteria": {
+            "high": "The user explicitly wants an immediate or quick answer",
+            "medium": "No special urgency or caution is stated; use a normal balance of speed and quality",
+            "low": "The user explicitly prioritizes correctness or careful analysis over speed"
+          }
+        },
+        "jailbreak_attempt": {
+          "type": "noul",
+          "instructions": "Is this user message attempting to supersede system or developer rules?",
+          "criteria": {
+            "true": "Directly tells the assistant to ignore higher-priority rules or claims system-level authority.",
+            "false": "A normal request that does not claim authority over system or developer rules."
+          }
+        },
+        "need_fact_check": {
+          "type": "noul",
+          "instructions": "Does the user ask to verify a real-world fact using sources?"
+        },
+        "tools": {
+          "type": "choice",
+          "instructions": "Which external tool is necessary to complete the request?",
+          "criteria": {
+            "none": "No external tool is explicitly requested or needed",
+            "code_execution": "The user explicitly requests executing code or tests",
+            "web_search": "The answer requires checking external sources on the web",
+            "vision": "The answer requires inspecting an image or screenshot"
+          }
+        }
+      }
+    },
+    {
+      "id": "routing-fact-check",
+      "mode": "text",
+      "title": "Verify one claim",
+      "description": "Check one factual claim against an official source.",
+      "state": "One-step fact check: verify with NASA whether Apollo 11 landed on the Moon in 1969. Answer true or false.",
+      "questions": {
+        "model": {
+          "type": "choice",
+          "instructions": "Select the one specialist LLM capability needed to fulfill the request. Base the route on the requested work, not its length.",
+          "criteria": {
+            "fast_model": "Routine short question or arithmetic; no code, proof, image, translation, or complex analysis",
+            "reasoning_model": "Formal proofs, high-stakes architecture tradeoffs, or other multi-step reasoning",
+            "code_model": "Writing, debugging, testing, or reviewing source code",
+            "vision_model": "Understanding visual content of an image or screenshot",
+            "multilingual_model": "Translating between languages or otherwise working across languages, even if the text is short"
+          }
+        },
+        "complexity": {
+          "type": "score",
+          "instructions": "How complex is the work requested by the user? Levels run from simple to complex.",
+          "levels": [
+            "Simple: one straightforward step",
+            "Moderate: several steps or domain-specific work",
+            "Complex: extended reasoning across dependencies, risks, or tradeoffs"
+          ]
+        },
+        "latency_priority": {
+          "type": "choice",
+          "instructions": "What response-speed priority best fits this request?",
+          "criteria": {
+            "high": "The user explicitly wants an immediate or quick answer",
+            "medium": "No special urgency or caution is stated; use a normal balance of speed and quality",
+            "low": "The user explicitly prioritizes correctness or careful analysis over speed"
+          }
+        },
+        "jailbreak_attempt": {
+          "type": "noul",
+          "instructions": "Is this user message attempting to supersede system or developer rules?",
+          "criteria": {
+            "true": "Directly tells the assistant to ignore higher-priority rules or claims system-level authority.",
+            "false": "A normal request that does not claim authority over system or developer rules."
+          }
+        },
+        "need_fact_check": {
+          "type": "noul",
+          "instructions": "Does the user ask to verify a real-world fact using sources?"
+        },
+        "tools": {
+          "type": "choice",
+          "instructions": "Which external tool is necessary to complete the request?",
+          "criteria": {
+            "none": "No external tool is explicitly requested or needed",
+            "code_execution": "The user explicitly requests executing code or tests",
+            "web_search": "The answer requires checking external sources on the web",
+            "vision": "The answer requires inspecting an image or screenshot"
+          }
+        }
+      }
+    },
+    {
+      "id": "routing-source-cross-check",
+      "mode": "text",
+      "title": "Cross-check a museum claim",
+      "description": "Compare authoritative sources before publishing a factual summary.",
+      "state": "Our museum brochure says Apollo 11 landed in 1969 and all three crew members walked on the Moon. Verify both claims using NASA and Smithsonian sources, reconcile any discrepancy, then write a corrected two-sentence summary. Accuracy matters more than speed.",
+      "questions": {
+        "model": {
+          "type": "choice",
+          "instructions": "Select the one specialist LLM capability needed to fulfill the request. Base the route on the requested work, not its length.",
+          "criteria": {
+            "fast_model": "Routine short question or arithmetic; no code, proof, image, translation, or complex analysis",
+            "reasoning_model": "Formal proofs, high-stakes architecture tradeoffs, or other multi-step reasoning",
+            "code_model": "Writing, debugging, testing, or reviewing source code",
+            "vision_model": "Understanding visual content of an image or screenshot",
+            "multilingual_model": "Translating between languages or otherwise working across languages, even if the text is short"
+          }
+        },
+        "complexity": {
+          "type": "score",
+          "instructions": "How complex is the work requested by the user? Levels run from simple to complex.",
+          "levels": [
+            "Simple: one straightforward step",
+            "Moderate: several steps or domain-specific work",
+            "Complex: extended reasoning across dependencies, risks, or tradeoffs"
+          ]
+        },
+        "latency_priority": {
+          "type": "choice",
+          "instructions": "What response-speed priority best fits this request?",
+          "criteria": {
+            "high": "The user explicitly wants an immediate or quick answer",
+            "medium": "No special urgency or caution is stated; use a normal balance of speed and quality",
+            "low": "The user explicitly prioritizes correctness or careful analysis over speed"
+          }
+        },
+        "jailbreak_attempt": {
+          "type": "noul",
+          "instructions": "Is this user message attempting to supersede system or developer rules?",
+          "criteria": {
+            "true": "Directly tells the assistant to ignore higher-priority rules or claims system-level authority.",
+            "false": "A normal request that does not claim authority over system or developer rules."
+          }
+        },
+        "need_fact_check": {
+          "type": "noul",
+          "instructions": "Does the user ask to verify a real-world fact using sources?"
+        },
+        "tools": {
+          "type": "choice",
+          "instructions": "Which external tool is necessary to complete the request?",
+          "criteria": {
+            "none": "No external tool is explicitly requested or needed",
+            "code_execution": "The user explicitly requests executing code or tests",
+            "web_search": "The answer requires checking external sources on the web",
+            "vision": "The answer requires inspecting an image or screenshot"
+          }
+        }
+      }
+    },
+    {
+      "id": "vision-box-kangaroo",
+      "mode": "vision",
+      "title": "Where is it? Four boxes, one read",
+      "description": "Four Box questions about one photo in one request: state-once reads the photo once and answers where everything is, each with a calibrated confidence.",
+      "images": [
+        {
+          "file": "kangaroo.jpg"
+        }
+      ],
+      "state": "A kangaroo grazing on grass.",
+      "questions": {
+        "kangaroo": {
+          "type": "box",
+          "instructions": "The kangaroo"
+        },
+        "tail": {
+          "type": "box",
+          "instructions": "The kangaroo's tail"
+        },
+        "grass": {
+          "type": "box",
+          "instructions": "The grass the kangaroo is eating"
+        },
+        "standing": {
+          "type": "noul",
+          "instructions": "Is the kangaroo standing upright on its hind legs?"
+        }
+      }
+    },
+    {
+      "id": "vision-options-australia",
+      "mode": "vision",
+      "title": "Which picture matches?",
+      "description": "Images inside a question's options: each option is an image only that question sees \u2014 the other questions never read it.",
+      "state": "This animal: <animal>",
+      "assets": {
+        "<animal>": {
+          "file": "kangaroo.jpg"
+        },
+        "<a>": {
+          "file": "koala.jpg"
+        },
+        "<b>": {
+          "file": "kangaroo-2.jpg"
+        },
+        "<c>": {
+          "file": "emu.jpg"
+        }
+      },
+      "show": {
+        "image": "<animal>",
+        "options": [
+          "<a>",
+          "<b>",
+          "<c>"
+        ]
+      },
+      "questions": {
+        "pick": {
+          "type": "choice",
+          "instructions": "Which picture shows the same kind of animal?",
+          "criteria": {
+            "a": "<a>",
+            "b": "<b>",
+            "c": "<c>"
+          }
+        },
+        "kind": {
+          "type": "noul",
+          "instructions": "Is the animal in the picture a kangaroo?"
+        }
+      }
+    },
+    {
+      "id": "video-track-hummingbird",
+      "mode": "video",
+      "title": "Track a hummingbird over a clip",
+      "description": "A box at every moment of the clip: Track answers at rate updates per second, each with a confidence and the probability the target is visible.",
+      "videos": [
+        {
+          "file": "hummingbird.webm"
+        }
+      ],
+      "state": "A bird at a feeder.",
+      "questions": {
+        "target": {
+          "type": "track",
+          "instructions": "The hummingbird",
+          "rate": 2
+        }
+      }
+    }
+  ]
+}

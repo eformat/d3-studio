@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.playwright-cli/
+*.egg-info/
+# The tiny turbo fixture is built locally (make fixture), never committed.
+.fixture/
+# Setuptools build output: make image re-rsyncs model-runtime from the
+# semantic-router checkout, and rsync -a ignores .gitignore upstream.
+model-runtime/build/

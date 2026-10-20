@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>d3 Studio</title>
+  <meta name="theme-color" content="#000000">
+  <link rel="stylesheet" href="/assets/styles.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='16' fill='%23e91a22'/%3E%3Ctext x='16' y='21.5' font-size='13' font-family='sans-serif' font-weight='700' fill='%23fff' text-anchor='middle'%3Ed3%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand" id="brand">
+      <span class="brand-mark">d3</span>
+      <span class="brand-name">Studio</span>
+      <span class="brand-sub">multimodal decision studio</span>
+    </div>
+    <div class="topbar-right">
+      <a class="nav-link" href="/api/docs" title="The API contract (Swagger)">API</a>
+      <a class="nav-link nav-ext" href="https://github.com/eformat/d3-studio" target="_blank" rel="noopener" title="github.com/eformat/d3-studio">GitHub</a>
+      <button id="model-card-btn" class="ghost-btn" title="About the model">model ▾</button>
+      <span id="ready-badge" class="badge badge-starting" title="/api/ready">starting…</span>
+    </div>
+  </header>
+
+  <div id="model-card" class="model-card hidden" aria-hidden="true">
+    <div class="model-card-head">
+      <strong id="mc-name">d3-turbo</strong>
+      <span id="mc-release" class="muted"></span>
+    </div>
+    <p class="muted" id="mc-desc">The 26B multimodal decision model of Decision 3.0. One read of the input answers every question — choice, yes / no, score, box and track — with a probability for every answer.</p>
+    <dl class="model-facts" id="mc-facts"></dl>
+    <p class="muted tiny" id="mc-source"></p>
+  </div>
+
+  <main class="main wide">
+    <nav class="mode-tabs" id="mode-tabs" role="tablist">
+      <button class="mode-tab active" data-mode="text" role="tab">Text</button>
+      <button class="mode-tab" data-mode="vision" role="tab">Vision</button>
+      <button class="mode-tab" data-mode="video" role="tab">Video</button>
+    </nav>
+
+    <section id="deck-head" class="deck-head">
+      <div class="deck-head-row">
+        <h1 id="deck-title">—</h1>
+        <span id="deck-count" class="muted tiny mono"></span>
+      </div>
+      <p id="deck-desc" class="muted"></p>
+    </section>
+
+    <div class="chip-row" id="chip-row">
+      <button id="chip-prev" class="chip-arrow" title="earlier" aria-label="earlier decks">‹</button>
+      <div id="chip-scroller" class="chip-scroller"></div>
+      <button id="chip-next" class="chip-arrow" title="later" aria-label="later decks">›</button>
+    </div>
+
+    <div class="panels">
+      <section class="panel editor-panel">
+        <!-- Media panel (vision / video modes) -->
+        <div id="media-panel" class="media-panel hidden">
+          <div id="image-stage" class="image-stage hidden">
+            <img id="stage-image" alt="deck image">
+            <div id="box-layer" class="box-layer"></div>
+          </div>
+          <div id="video-stage" class="video-stage hidden">
+            <video id="stage-video" muted loop playsinline preload="auto"></video>
+            <div id="track-layer" class="box-layer"></div>
+          </div>
+          <div class="media-controls">
+            <label class="ghost-btn media-btn">upload…<input id="media-upload" type="file" accept="image/*,video/*" hidden></label>
+            <input id="media-url" class="url-input" type="text" placeholder="or paste an http(s) URL / data: URL">
+            <button id="media-apply" class="ghost-btn">use</button>
+            <span id="media-note" class="muted tiny"></span>
+          </div>
+          <!-- track scrubber -->
+          <div id="track-scrub" class="track-scrub hidden">
+            <div class="scrub-row">
+              <button id="track-play" class="chip-arrow track-play" title="play / pause" aria-label="play or pause the clip">▶</button>
+              <span id="scrub-time" class="mono tiny">0.0s</span>
+              <input id="scrub-range" type="range" min="0" max="1000" value="0">
+              <span id="scrub-visible" class="mono tiny">visible —</span>
+            </div>
+            <canvas id="visible-canvas" class="visible-canvas" height="44"></canvas>
+          </div>
+        </div>
+
+        <!-- State editor -->
+        <div class="editor-block">
+          <label class="block-label" for="state-input">state</label>
+          <textarea id="state-input" rows="4" spellcheck="false" placeholder="The input every question reads…"></textarea>
+        </div>
+
+        <!-- Question cards -->
+        <div class="editor-block">
+          <div class="block-label-row">
+            <label class="block-label">questions <span class="muted tiny">(one read answers all)</span></label>
+            <button id="add-question" class="ghost-btn tiny-btn">+ add</button>
+          </div>
+          <div id="question-cards" class="question-cards"></div>
+        </div>
+
+        <div class="run-row">
+          <button id="run-btn" class="run-btn">run <kbd>Ctrl</kbd>+<kbd>⏎</kbd></button>
+          <label class="muted tiny" title="Reads up to 131k tokens per question instead of 32k — slower, for long inputs and many images."><input id="long-ctx" type="checkbox"> long context</label>
+          <span id="run-note" class="muted tiny"></span>
+        </div>
+      </section>
+
+      <section class="panel results-panel">
+        <div class="block-label-row">
+          <label class="block-label">answers</label>
+          <span id="result-timing" class="mono tiny"></span>
+        </div>
+        <div id="results" class="results">
+          <p class="muted" id="results-empty">Run a deck — every question is answered in one read of the input.</p>
+        </div>
+      </section>
+    </div>
+
+    <p id="media-credits" class="media-credits"></p>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="/assets/app.js" type="module"></script>
+</body>
+</html>
